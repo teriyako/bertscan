@@ -1,5 +1,11 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    BookOpen,
+    Database,
+    FileDown,
+    FolderGit2,
+    LayoutGrid,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -14,6 +20,9 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { dashboard as dataHubDashboard } from '@/routes/data-hub';
+import { index as exportsIndex } from '@/routes/data-hub/exports';
+import { index as submissionsIndex } from '@/routes/data-hub/submissions';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -21,6 +30,24 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+];
+
+const dataHubNavItems: NavItem[] = [
+    {
+        title: 'Data Hub',
+        href: dataHubDashboard(),
+        icon: Database,
+    },
+    {
+        title: 'Submissions',
+        href: submissionsIndex(),
+        icon: Database,
+    },
+    {
+        title: 'Exports',
+        href: exportsIndex(),
+        icon: FileDown,
     },
 ];
 
@@ -54,6 +81,7 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <NavMain items={dataHubNavItems} />
             </SidebarContent>
 
             <SidebarFooter>

@@ -20,7 +20,9 @@ interface Submission {
     extracted_at: string | null;
     model_version: string | null;
     app_version: string | null;
-    features: Record<string, unknown>;
+    features: Record<string, unknown> | null;
+    feature_text: string | null;
+    pipeline_manifest: Record<string, unknown> | null;
     rejection_reason: string | null;
     reviewed_at: string | null;
     user: { id: number; name: string; email: string } | null;
@@ -207,11 +209,35 @@ export default function SubmissionShow({
 
                 <Card>
                     <CardHeader>
+                        <CardTitle className="text-sm">Feature Text</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <pre className="max-h-60 overflow-auto rounded bg-muted p-3 text-xs whitespace-pre-wrap break-words">
+                            {submission.feature_text ?? '—'}
+                        </pre>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
                         <CardTitle className="text-sm">Features JSON</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <pre className="max-h-96 overflow-auto rounded bg-muted p-3 text-xs">
-                            {JSON.stringify(submission.features, null, 2)}
+                            {JSON.stringify(submission.features ?? {}, null, 2)}
+                        </pre>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-sm">
+                            Pipeline Manifest JSON
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <pre className="max-h-96 overflow-auto rounded bg-muted p-3 text-xs">
+                            {JSON.stringify(submission.pipeline_manifest ?? {}, null, 2)}
                         </pre>
                     </CardContent>
                 </Card>

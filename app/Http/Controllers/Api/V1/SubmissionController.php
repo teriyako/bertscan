@@ -48,7 +48,9 @@ class SubmissionController extends Controller
                 'schema_version' => $item['schema_version'],
                 'package_name' => $item['package_name'],
                 'apk_sha256' => $item['apk_sha256'],
-                'features' => $item['features'],
+                'features' => $item['features'] ?? null,
+                'feature_text' => $item['feature_text'] ?? $this->buildFeatureText($item['features'] ?? null),
+                'pipeline_manifest' => $item['pipeline_manifest'] ?? null,
                 'model_version' => $item['model_version'] ?? null,
                 'app_version' => $data['app_version'] ?? null,
                 'status' => 'new',
@@ -68,5 +70,22 @@ class SubmissionController extends Controller
             'rejected' => $rejected,
             'items' => $itemResults,
         ], 201);
+    }
+
+    private function buildFeatureText(null|array $features): ?string
+    {
+        if (! is_array($features) || $features === []) {
+            return null;
+        }
+
+        $active = [];
+
+        foreach ($features as $name => $value) {
+            if (is_string($name) && $name !== '' && (bool) $value) {
+                $active[] = $name;
+            }
+        }
+
+        return $active === [] ? null : implode(' ', $active);
     }
 }

@@ -21,6 +21,8 @@ class Submission extends Model
         'package_name',
         'apk_sha256',
         'features',
+        'feature_text',
+        'pipeline_manifest',
         'model_version',
         'app_version',
         'status',
@@ -36,6 +38,7 @@ class Submission extends Model
             'extracted_at' => 'datetime',
             'reviewed_at' => 'datetime',
             'features' => 'array',
+            'pipeline_manifest' => 'array',
             'score' => 'float',
             'schema_version' => 'integer',
         ];

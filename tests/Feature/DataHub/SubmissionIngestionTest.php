@@ -58,6 +58,10 @@ test('opted-in user can ingest a batch', function () {
 
     $this->assertDatabaseCount('submissions', 2);
     $this->assertDatabaseHas('devices', ['user_id' => $user->id, 'device_public_id' => 'abc-device-001']);
+    $this->assertDatabaseHas('submissions', [
+        'apk_sha256' => str_repeat('a', 64),
+        'feature_text' => 'feature1 feature2',
+    ]);
 });
 
 test('device is reused on repeated batch', function () {
@@ -147,6 +151,25 @@ test('missing schema_version fails validation', function () {
         ->assertJsonValidationErrors(['items.0.schema_version']);
 });
 
+test('item can be ingested with feature_text only', function () {
+    $user = makeOptedInUser();
+    Sanctum::actingAs($user);
+
+    $item = validItem();
+    unset($item['features']);
+
+    $response = $this->postJson('/api/v1/submissions/batch', [
+        'device_public_id' => 'dev123',
+        'items' => [$item],
+    ]);
+
+    $response->assertCreated()->assertJsonPath('accepted', 1);
+    $this->assertDatabaseHas('submissions', [
+        'apk_sha256' => str_repeat('a', 64),
+        'feature_text' => 'feature1 feature2',
+    ]);
+});
+
 // ────────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────────
@@ -161,6 +184,11 @@ function validItem(array $overrides = []): array
         'apk_sha256' => str_repeat('a', 64),
         'extracted_at' => now()->toIso8601String(),
         'features' => ['feature1' => 1, 'feature2' => 0],
+        'feature_text' => 'feature1 feature2',
+        'pipeline_manifest' => [
+            'feature_order' => 'android_static_v1_215',
+            'tokenizer' => ['type' => 'whitespace'],
+        ],
         'model_version' => 'v1.0',
     ], $overrides);
 }

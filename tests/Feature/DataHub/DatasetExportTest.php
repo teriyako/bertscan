@@ -22,6 +22,8 @@ function makeApprovedSubmission(array $attrs = []): Submission
         'package_name' => 'com.example.test',
         'apk_sha256' => str_pad(bin2hex(random_bytes(8)), 64, '0'),
         'features' => ['f1' => 1],
+        'feature_text' => 'f1',
+        'pipeline_manifest' => ['feature_order' => 'android_static_v1_215'],
         'status' => 'approved',
     ], $attrs));
 }
@@ -68,6 +70,25 @@ test('export csv file is stored in local disk', function () {
     expect($export->status)->toBe('completed');
     expect($export->export_path)->not->toBeNull();
     Storage::disk('local')->assertExists($export->export_path);
+});
+
+test('export csv includes feature text and pipeline manifest columns', function () {
+    Storage::fake('local');
+
+    $admin = User::factory()->create(['email_verified_at' => now()]);
+    makeApprovedSubmission(['schema_version' => 1]);
+
+    $this->actingAs($admin)->post(route('data-hub.exports.store'), [
+        'schema_version' => 1,
+        'approved_only' => true,
+        'unique_by_hash' => false,
+    ]);
+
+    $export = DatasetExport::first();
+    $csv = Storage::disk('local')->get($export->export_path);
+
+    expect($csv)->toContain('feature_text');
+    expect($csv)->toContain('pipeline_manifest_json');
 });
 
 test('export counts benign and malicious separately', function () {

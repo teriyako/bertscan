@@ -105,6 +105,12 @@ Content-Type: application/json
       "apk_sha256": "aabbcc...64hexchars",
       "extracted_at": "2025-01-01T12:00:00Z",
       "features": { "feature1": 1, "feature2": 0 },
+      "feature_text": "feature1 feature2",
+      "pipeline_manifest": {
+        "feature_order": "android_static_v1_215",
+        "tokenizer": { "type": "whitespace" },
+        "model_input": "text"
+      },
       "model_version": "v1.0"
     }
   ]
@@ -135,7 +141,9 @@ Content-Type: application/json
 | `items.*.package_name` | required string, max 255 |
 | `items.*.apk_sha256` | required, exactly 64 lowercase hex chars |
 | `items.*.extracted_at` | nullable ISO8601 date |
-| `items.*.features` | required array, max 500 keys |
+| `items.*.features` | required when `feature_text` absent; array, max 500 keys |
+| `items.*.feature_text` | required when `features` absent; normalized space-separated active feature names |
+| `items.*.pipeline_manifest` | nullable object containing feature/tokenizer/model pipeline metadata |
 | `items.*.model_version` | nullable string, max 50 |
 
 **Rate limit:** 60 batch requests per minute per authenticated user.
@@ -155,7 +163,7 @@ From the **Data Hub → Exports → New Export** page, select:
 The CSV columns are:
 
 ```
-apk_sha256, package_name, label, schema_version, features_json, extracted_at, model_version, app_version
+apk_sha256, package_name, label, schema_version, features_json, feature_text, pipeline_manifest_json, extracted_at, model_version, app_version
 ```
 
 Download the CSV from the export detail page. Use it directly in Colab for retraining.

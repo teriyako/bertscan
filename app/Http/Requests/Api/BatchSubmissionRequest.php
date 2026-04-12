@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Models\Contributor;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -12,7 +13,9 @@ class BatchSubmissionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() !== null && $this->user()->data_sharing_enabled;
+        $contributor = $this->user();
+
+        return $contributor instanceof Contributor && $contributor->data_sharing_enabled;
     }
 
     /**

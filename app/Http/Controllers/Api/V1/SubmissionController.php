@@ -17,13 +17,13 @@ class SubmissionController extends Controller
      */
     public function batch(BatchSubmissionRequest $request): JsonResponse
     {
-        $user = $request->user();
+        $contributor = $request->user();
         $data = $request->validated();
 
-        // Upsert device by device_public_id scoped to the user
+        // Upsert device by device_public_id scoped to the contributor
         $device = Device::firstOrCreate(
             [
-                'user_id' => $user->id,
+                'contributor_id' => $contributor->id,
                 'device_public_id' => $data['device_public_id'],
             ],
             [
@@ -39,7 +39,7 @@ class SubmissionController extends Controller
 
         foreach ($data['items'] as $index => $item) {
             $submissionData = [
-                'user_id' => $user->id,
+                'contributor_id' => $contributor->id,
                 'device_id' => $device->id,
                 'received_at' => now(),
                 'extracted_at' => isset($item['extracted_at']) ? $item['extracted_at'] : null,

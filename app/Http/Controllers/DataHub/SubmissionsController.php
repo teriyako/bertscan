@@ -13,7 +13,7 @@ class SubmissionsController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Submission::with(['user:id,name,email', 'device:id,device_public_id']);
+        $query = Submission::with(['contributor:id,email', 'device:id,device_public_id']);
 
         // Filters
         if ($request->filled('status')) {
@@ -45,7 +45,7 @@ class SubmissionsController extends Controller
 
     public function show(Submission $submission): Response
     {
-        $submission->load(['user:id,name,email', 'device:id,device_public_id', 'reviewer:id,name']);
+        $submission->load(['contributor:id,email', 'device:id,device_public_id', 'reviewer:id,name']);
 
         return Inertia::render('data-hub/submissions/show', [
             'submission' => $submission,

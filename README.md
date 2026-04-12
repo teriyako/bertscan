@@ -56,34 +56,111 @@ The Data Hub is a backend system for:
 
 ---
 
-## Mobile Client: Authentication & Ingestion API
+## Mobile Contributor Auth & Opt-in
 
-### 1. Register/Login
+Android users who want to contribute anonymised scan telemetry must first register as **contributors** (separate from web admin users).  
+No 2FA is required for contributors.
 
-When a user opts into data sharing, have them create an account via the standard web auth flow or a dedicated API call (Fortify handles registration/login).
+### User types
 
-### 2. Obtain a Sanctum Token
+| Type | Table | Auth method | Use case |
+|------|-------|-------------|----------|
+| **Admin / staff** | `users` | Web session (Fortify) | Dashboard, moderation, exports |
+| **Mobile contributor** | `contributors` | Sanctum bearer token | Opt-in data sharing, telemetry ingestion |
 
-After login (via web session or `POST /login`), issue a token via:
+---
+
+### 1. Register
 
 ```http
-POST /sanctum/token
+POST /api/v1/contributor/auth/register
 Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "password",
+  "password": "SecurePass1!",
+  "password_confirmation": "SecurePass1!",
+  "data_sharing_enabled": true,
+  "consent_version": "1.0",
+  "wifi_only_upload": true,
   "device_name": "Pixel 9"
 }
 ```
 
-> Note: You may need to add a token-issue endpoint. The token is returned as a plain-text bearer token. Store it securely on-device (e.g., Android Keystore).
+**Response (201 Created):**
 
-### 3. Opt the User In (Server-side)
+```json
+{
+  "message": "Registration successful.",
+  "token": "<sanctum_bearer_token>",
+  "contributor": {
+    "id": 1,
+    "email": "user@example.com",
+    "data_sharing_enabled": true,
+    "consented_at": "2025-01-01T12:00:00+00:00",
+    "consent_version": "1.0",
+    "wifi_only_upload": true
+  }
+}
+```
 
-The ingestion endpoint requires `data_sharing_enabled = true` on the user record. Update it via your settings page or a dedicated API endpoint.
+> The token is returned immediately on registration – no separate login step needed.  
+> Store the token securely (e.g., Android Keystore / EncryptedSharedPreferences).
 
-### 4. Batch Ingestion
+**Consent semantics:**
+- `data_sharing_enabled: true` – contributor opts in; `consented_at` is set automatically to the current timestamp.
+- `data_sharing_enabled: false` – contributor registers without opting in; `consented_at` remains `null`. Telemetry ingestion will be blocked until they opt in.
+- `consent_version` – record the policy version the user agreed to (e.g. `"1.0"`).
+- `wifi_only_upload` – client-side hint; default `true`. Backend does not enforce this.
+
+---
+
+### 2. Login / obtain token
+
+If the user already has an account (e.g. reinstall):
+
+```http
+POST /api/v1/contributor/auth/token
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "SecurePass1!",
+  "device_name": "Pixel 9"
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "token": "<sanctum_bearer_token>",
+  "contributor": { "..." }
+}
+```
+
+---
+
+### 3. Logout / revoke token
+
+```http
+DELETE /api/v1/contributor/auth/token
+Authorization: Bearer <sanctum_bearer_token>
+```
+
+**Response (200 OK):**
+
+```json
+{ "message": "Token revoked." }
+```
+
+---
+
+### 4. Batch Ingestion (prerequisite: opted in)
+
+The ingestion endpoint requires:
+1. A valid Sanctum bearer token for a **contributor** (not an admin user).
+2. `data_sharing_enabled = true` on the contributor's record.
 
 ```http
 POST /api/v1/submissions/batch
@@ -146,9 +223,22 @@ Content-Type: application/json
 | `items.*.pipeline_manifest` | nullable object containing feature/tokenizer/model pipeline metadata |
 | `items.*.model_version` | nullable string, max 50 |
 
-**Rate limit:** 60 batch requests per minute per authenticated user.
+**Rate limit:** 60 batch requests per minute per authenticated contributor.
 
 ---
+
+### Contributor consent fields (`contributors` table)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `data_sharing_enabled` | boolean | Whether the contributor has opted in |
+| `consented_at` | timestamp | When consent was granted (set automatically on register when opted in) |
+| `consent_version` | string | Version of the consent policy accepted |
+| `wifi_only_upload` | boolean | Client preference: upload on Wi-Fi only (default `true`) |
+
+---
+
+
 
 ## Dataset Export
 
@@ -170,19 +260,6 @@ Download the CSV from the export detail page. Use it directly in Colab for retra
 
 ---
 
-## User Consent Fields
-
-The following fields are stored on the `users` table:
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `data_sharing_enabled` | boolean | Whether the user has opted in |
-| `consented_at` | timestamp | When consent was granted |
-| `consent_version` | string | Version of the consent policy accepted |
-| `wifi_only_upload` | boolean | User preference: upload on Wi-Fi only (default true) |
-
----
-
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -199,6 +276,12 @@ The following fields are stored on the `users` table:
 
 ```bash
 php artisan test
+```
+
+Or run just the contributor auth tests:
+
+```bash
+php artisan test tests/Feature/Contributor/
 ```
 
 Or run just the Data Hub tests:

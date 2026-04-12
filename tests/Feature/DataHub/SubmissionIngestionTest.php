@@ -1,19 +1,14 @@
 <?php
 
-use App\Models\User;
+use App\Models\Contributor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
-function makeOptedInUser(): User
+function makeOptedInContributor(): Contributor
 {
-    return User::factory()->create([
-        'email_verified_at' => now(),
-        'data_sharing_enabled' => true,
-        'consented_at' => now(),
-        'consent_version' => '1.0',
-    ]);
+    return Contributor::factory()->optedIn()->create();
 }
 
 // ────────────────────────────────────────────────
@@ -25,9 +20,9 @@ test('unauthenticated request is rejected', function () {
     $response->assertUnauthorized();
 });
 
-test('non-opted-in user is forbidden', function () {
-    $user = User::factory()->create(['data_sharing_enabled' => false]);
-    Sanctum::actingAs($user);
+test('non-opted-in contributor is forbidden', function () {
+    $contributor = Contributor::factory()->create(['data_sharing_enabled' => false]);
+    Sanctum::actingAs($contributor);
 
     $response = $this->postJson('/api/v1/submissions/batch', [
         'device_public_id' => 'device123',
@@ -41,9 +36,9 @@ test('non-opted-in user is forbidden', function () {
 // Successful batch ingestion
 // ────────────────────────────────────────────────
 
-test('opted-in user can ingest a batch', function () {
-    $user = makeOptedInUser();
-    Sanctum::actingAs($user);
+test('opted-in contributor can ingest a batch', function () {
+    $contributor = makeOptedInContributor();
+    Sanctum::actingAs($contributor);
 
     $response = $this->postJson('/api/v1/submissions/batch', [
         'device_public_id' => 'abc-device-001',
@@ -57,7 +52,7 @@ test('opted-in user can ingest a batch', function () {
         ->assertJsonPath('rejected', 0);
 
     $this->assertDatabaseCount('submissions', 2);
-    $this->assertDatabaseHas('devices', ['user_id' => $user->id, 'device_public_id' => 'abc-device-001']);
+    $this->assertDatabaseHas('devices', ['contributor_id' => $contributor->id, 'device_public_id' => 'abc-device-001']);
     $this->assertDatabaseHas('submissions', [
         'apk_sha256' => str_repeat('a', 64),
         'feature_text' => 'feature1 feature2',
@@ -65,8 +60,8 @@ test('opted-in user can ingest a batch', function () {
 });
 
 test('device is reused on repeated batch', function () {
-    $user = makeOptedInUser();
-    Sanctum::actingAs($user);
+    $contributor = makeOptedInContributor();
+    Sanctum::actingAs($contributor);
 
     $payload = fn () => [
         'device_public_id' => 'stable-device',
@@ -85,8 +80,8 @@ test('device is reused on repeated batch', function () {
 // ────────────────────────────────────────────────
 
 test('missing device_public_id fails validation', function () {
-    $user = makeOptedInUser();
-    Sanctum::actingAs($user);
+    $contributor = makeOptedInContributor();
+    Sanctum::actingAs($contributor);
 
     $response = $this->postJson('/api/v1/submissions/batch', [
         'items' => [validItem()],
@@ -97,8 +92,8 @@ test('missing device_public_id fails validation', function () {
 });
 
 test('invalid apk_sha256 fails validation', function () {
-    $user = makeOptedInUser();
-    Sanctum::actingAs($user);
+    $contributor = makeOptedInContributor();
+    Sanctum::actingAs($contributor);
 
     $response = $this->postJson('/api/v1/submissions/batch', [
         'device_public_id' => 'dev123',
@@ -110,8 +105,8 @@ test('invalid apk_sha256 fails validation', function () {
 });
 
 test('invalid label fails validation', function () {
-    $user = makeOptedInUser();
-    Sanctum::actingAs($user);
+    $contributor = makeOptedInContributor();
+    Sanctum::actingAs($contributor);
 
     $response = $this->postJson('/api/v1/submissions/batch', [
         'device_public_id' => 'dev123',
@@ -123,8 +118,8 @@ test('invalid label fails validation', function () {
 });
 
 test('batch larger than 100 items fails', function () {
-    $user = makeOptedInUser();
-    Sanctum::actingAs($user);
+    $contributor = makeOptedInContributor();
+    Sanctum::actingAs($contributor);
 
     $response = $this->postJson('/api/v1/submissions/batch', [
         'device_public_id' => 'dev123',
@@ -136,8 +131,8 @@ test('batch larger than 100 items fails', function () {
 });
 
 test('missing schema_version fails validation', function () {
-    $user = makeOptedInUser();
-    Sanctum::actingAs($user);
+    $contributor = makeOptedInContributor();
+    Sanctum::actingAs($contributor);
 
     $item = validItem();
     unset($item['schema_version']);
@@ -152,8 +147,8 @@ test('missing schema_version fails validation', function () {
 });
 
 test('item can be ingested with feature_text only', function () {
-    $user = makeOptedInUser();
-    Sanctum::actingAs($user);
+    $contributor = makeOptedInContributor();
+    Sanctum::actingAs($contributor);
 
     $item = validItem();
     unset($item['features']);

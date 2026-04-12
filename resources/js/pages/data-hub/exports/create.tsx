@@ -22,7 +22,7 @@ export default function ExportsCreate() {
     const [form, setForm] = useState({
         name: '',
         schema_version: '',
-        label: '',
+        label: 'all',
         date_from: '',
         date_to: '',
         approved_only: true,
@@ -44,7 +44,7 @@ export default function ExportsCreate() {
             const params = new URLSearchParams();
             params.set('schema_version', form.schema_version);
 
-            if (form.label) {
+            if (form.label !== 'all') {
                 params.set('label', form.label);
             }
 
@@ -88,7 +88,7 @@ export default function ExportsCreate() {
             {
                 name: form.name || undefined,
                 schema_version: form.schema_version,
-                label: form.label || undefined,
+                label: form.label === 'all' ? undefined : form.label,
                 date_from: form.date_from || undefined,
                 date_to: form.date_to || undefined,
                 approved_only: form.approved_only,
@@ -166,7 +166,7 @@ export default function ExportsCreate() {
                                 <SelectValue placeholder="All labels" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All</SelectItem>
+                                <SelectItem value="all">All</SelectItem>
                                 <SelectItem value="benign">
                                     Benign only
                                 </SelectItem>

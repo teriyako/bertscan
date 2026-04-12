@@ -157,11 +157,11 @@ export default function SubmissionsIndex({
                     <div className="space-y-1">
                         <Label className="text-xs">Status</Label>
                         <Select
-                            value={localFilters.status ?? ''}
+                            value={localFilters.status ?? 'all'}
                             onValueChange={(v) =>
                                 setLocalFilters((f) => ({
                                     ...f,
-                                    status: v || undefined,
+                                    status: v === 'all' ? undefined : v,
                                 }))
                             }
                         >
@@ -169,7 +169,7 @@ export default function SubmissionsIndex({
                                 <SelectValue placeholder="All" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All</SelectItem>
+                                <SelectItem value="all">All</SelectItem>
                                 <SelectItem value="new">New</SelectItem>
                                 <SelectItem value="approved">
                                     Approved
@@ -183,11 +183,11 @@ export default function SubmissionsIndex({
                     <div className="space-y-1">
                         <Label className="text-xs">Label</Label>
                         <Select
-                            value={localFilters.label ?? ''}
+                            value={localFilters.label ?? 'all'}
                             onValueChange={(v) =>
                                 setLocalFilters((f) => ({
                                     ...f,
-                                    label: v || undefined,
+                                    label: v === 'all' ? undefined : v,
                                 }))
                             }
                         >
@@ -195,7 +195,7 @@ export default function SubmissionsIndex({
                                 <SelectValue placeholder="All" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="">All</SelectItem>
+                                <SelectItem value="all">All</SelectItem>
                                 <SelectItem value="benign">Benign</SelectItem>
                                 <SelectItem value="malicious">
                                     Malicious

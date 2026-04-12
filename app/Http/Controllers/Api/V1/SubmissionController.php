@@ -48,7 +48,7 @@ class SubmissionController extends Controller
                 'schema_version' => $item['schema_version'],
                 'package_name' => $item['package_name'],
                 'apk_sha256' => $item['apk_sha256'],
-                'features' => $item['features'] ?? null,
+                'features' => $item['features'] ?? [],
                 'feature_text' => $item['feature_text'] ?? $this->buildFeatureText($item['features'] ?? null),
                 'pipeline_manifest' => $item['pipeline_manifest'] ?? null,
                 'model_version' => $item['model_version'] ?? null,
@@ -72,7 +72,7 @@ class SubmissionController extends Controller
         ], 201);
     }
 
-    private function buildFeatureText(null|array $features): ?string
+    private function buildFeatureText(?array $features): ?string
     {
         if (! is_array($features) || $features === []) {
             return null;

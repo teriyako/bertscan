@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { dashboard } from '@/routes/data-hub';
+import { dashboard } from '@/routes';
 import { approve, index, reject } from '@/routes/data-hub/submissions';
 
 interface Submission {
@@ -442,7 +442,7 @@ function Row({
 
 SubmissionShow.layout = {
     breadcrumbs: [
-        { title: 'Data Hub', href: dashboard() },
+        { title: 'Dashboard', href: dashboard() },
         { title: 'Submissions', href: index() },
         { title: 'Detail' },
     ],

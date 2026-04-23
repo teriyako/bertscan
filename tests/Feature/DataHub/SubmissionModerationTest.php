@@ -150,7 +150,7 @@ test('guest cannot access submissions index', function () {
     $response->assertRedirect(route('login'));
 });
 
-test('submissions index includes package-level submission count metadata', function () {
+test('submissions index includes relevant stats metadata', function () {
     $admin = makeAdminUser();
     $user = User::factory()->create();
 
@@ -180,9 +180,12 @@ test('submissions index includes package-level submission count metadata', funct
 
     $response = $this->actingAs($admin)->get(route('data-hub.submissions.index'));
 
-    $response->assertOk()->assertInertia(
-        fn ($page) => $page->where('submissions.data.0.submission_count', 2)
-    );
+    $response->assertOk()->assertInertia(fn ($page) => $page
+        ->where('stats.total', 2)
+        ->where('stats.new', 2)
+        ->where('stats.approved', 0)
+        ->where('stats.rejected', 0)
+        ->where('stats.malicious', 0));
 });
 
 test('submission show includes paginated related submitter data', function () {

@@ -11,7 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { dashboard } from '@/routes/data-hub';
+import { dashboard } from '@/routes';
 import { create as createRoute, index, store } from '@/routes/data-hub/exports';
 
 interface PreviewResult {
@@ -286,7 +286,7 @@ export default function ExportsCreate() {
 
 ExportsCreate.layout = {
     breadcrumbs: [
-        { title: 'Data Hub', href: dashboard() },
+        { title: 'Dashboard', href: dashboard() },
         { title: 'Exports', href: index() },
         { title: 'Create', href: createRoute() },
     ],

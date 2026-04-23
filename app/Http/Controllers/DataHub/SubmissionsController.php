@@ -4,7 +4,6 @@ namespace App\Http\Controllers\DataHub;
 
 use App\Http\Controllers\Controller;
 use App\Models\Submission;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,32 +14,11 @@ class SubmissionsController extends Controller
     public function index(Request $request): Response
     {
         $query = Submission::query()
-            ->select('submissions.*')
             ->with([
                 'user:id,name,email',
                 'contributor:id,email',
                 'device:id,device_public_id,device_name',
-            ])
-            ->selectSub(function ($subQuery) {
-                $subQuery->from('submissions as duplicate')
-                    ->selectRaw('COUNT(*)');
-
-                $this->applySubmissionSignatureConstraints($subQuery, 'duplicate');
-            }, 'submission_count')
-            ->selectSub(function ($subQuery) {
-                $subQuery->from('submissions as duplicate')
-                    ->selectRaw('COUNT(DISTINCT duplicate.device_id)')
-                    ->whereNotNull('duplicate.device_id');
-
-                $this->applySubmissionSignatureConstraints($subQuery, 'duplicate');
-            }, 'device_count')
-            ->selectSub(function ($subQuery) {
-                $subQuery->from('submissions as duplicate')
-                    ->selectRaw('COUNT(DISTINCT duplicate.contributor_id)')
-                    ->whereNotNull('duplicate.contributor_id');
-
-                $this->applySubmissionSignatureConstraints($subQuery, 'duplicate');
-            }, 'contributor_count');
+            ]);
 
         // Filters
         if ($request->filled('status')) {
@@ -62,11 +40,22 @@ class SubmissionsController extends Controller
             $query->whereDate('received_at', '<=', $request->input('date_to'));
         }
 
+        $statsBaseQuery = clone $query;
+        $stats = [
+            'total' => (clone $statsBaseQuery)->count(),
+            'new' => (clone $statsBaseQuery)->where('status', 'new')->count(),
+            'approved' => (clone $statsBaseQuery)->where('status', 'approved')->count(),
+            'rejected' => (clone $statsBaseQuery)->where('status', 'rejected')->count(),
+            'malicious' => (clone $statsBaseQuery)->where('label', 'malicious')->count(),
+            'today' => (clone $statsBaseQuery)->whereDate('received_at', now())->count(),
+        ];
+
         $submissions = $query->latest('received_at')->paginate(25)->withQueryString();
 
         return Inertia::render('data-hub/submissions/index', [
             'submissions' => $submissions,
             'filters' => $request->only(['status', 'label', 'schema_version', 'package_name', 'date_from', 'date_to']),
+            'stats' => $stats,
         ]);
     }
 
@@ -173,20 +162,5 @@ class SubmissionsController extends Controller
         ]);
 
         return back()->with('success', count($request->input('ids')).' submission(s) rejected.');
-    }
-
-    /**
-     * Constrain a subquery to records that match a submission signature.
-     *
-     * Applies whereColumn constraints between the aliased subquery table and the
-     * parent `submissions` table using package_name, apk_sha256, schema_version, and label.
-     */
-    private function applySubmissionSignatureConstraints(QueryBuilder $query, string $alias): void
-    {
-        $query
-            ->whereColumn("$alias.package_name", 'submissions.package_name')
-            ->whereColumn("$alias.apk_sha256", 'submissions.apk_sha256')
-            ->whereColumn("$alias.schema_version", 'submissions.schema_version')
-            ->whereColumn("$alias.label", 'submissions.label');
     }
 }

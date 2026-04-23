@@ -58,6 +58,9 @@ interface Filters {
     date_to?: string;
 }
 
+// checkbox + package + label + status + schema + sha256 + device + sources + count + received + action
+const TABLE_COLUMN_COUNT = 11;
+
 function statusBadge(status: string) {
     const variants: Record<
         string,
@@ -86,7 +89,16 @@ function formatRelativeSameDay(timestamp: string): string {
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const minutes = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+
+    if (diffMs <= 0) {
+        return 'Just now';
+    }
+
+    const minutes = Math.floor(diffMs / (1000 * 60));
+
+    if (minutes <= 0) {
+        return 'Just now';
+    }
 
     if (minutes < 60) {
         return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
@@ -100,13 +112,26 @@ function formatRelativeSameDay(timestamp: string): string {
 function formatReceived(timestamp: string): string {
     const date = new Date(timestamp);
     const now = new Date();
-    const isSameDay = date.toDateString() === now.toDateString();
+    const isSameDay =
+        date.getUTCFullYear() === now.getUTCFullYear() &&
+        date.getUTCMonth() === now.getUTCMonth() &&
+        date.getUTCDate() === now.getUTCDate();
 
     if (isSameDay) {
         return formatRelativeSameDay(timestamp);
     }
 
     return date.toLocaleString();
+}
+
+function decodeHtmlEntities(text: string): string {
+    if (typeof window === 'undefined') {
+        return text;
+    }
+
+    const document = new DOMParser().parseFromString(text, 'text/html');
+
+    return document.documentElement.textContent ?? text;
 }
 
 export default function SubmissionsIndex({
@@ -373,7 +398,7 @@ export default function SubmissionsIndex({
                             {submissions.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={11}
+                                        colSpan={TABLE_COLUMN_COUNT}
                                         className="p-6 text-center text-muted-foreground"
                                     >
                                         No submissions found.
@@ -453,8 +478,9 @@ export default function SubmissionsIndex({
                                 key={i}
                                 href={link.url ?? '#'}
                                 className={`rounded px-2 py-1 ${link.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'} ${!link.url ? 'pointer-events-none opacity-40' : ''}`}
-                                dangerouslySetInnerHTML={{ __html: link.label }}
-                            />
+                            >
+                                {decodeHtmlEntities(link.label)}
+                            </Link>
                         ))}
                     </div>
                 </div>

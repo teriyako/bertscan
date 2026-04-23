@@ -55,6 +55,16 @@ interface RelatedStats {
     contributor_count: number;
 }
 
+function decodeHtmlEntities(text: string): string {
+    if (typeof window === 'undefined') {
+        return text;
+    }
+
+    const document = new DOMParser().parseFromString(text, 'text/html');
+
+    return document.documentElement.textContent ?? text;
+}
+
 export default function SubmissionShow({
     submission,
     relatedSubmissions,
@@ -401,10 +411,9 @@ export default function SubmissionShow({
                                             key={i}
                                             href={link.url ?? '#'}
                                             className={`rounded px-2 py-1 ${link.active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'} ${!link.url ? 'pointer-events-none opacity-40' : ''}`}
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
+                                        >
+                                            {decodeHtmlEntities(link.label)}
+                                        </Link>
                                     ))}
                                 </div>
                             </div>

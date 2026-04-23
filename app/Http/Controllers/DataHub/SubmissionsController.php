@@ -4,6 +4,7 @@ namespace App\Http\Controllers\DataHub;
 
 use App\Http\Controllers\Controller;
 use App\Models\Submission;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,29 +23,23 @@ class SubmissionsController extends Controller
             ])
             ->selectSub(function ($subQuery) {
                 $subQuery->from('submissions as duplicate')
-                    ->selectRaw('COUNT(*)')
-                    ->whereColumn('duplicate.package_name', 'submissions.package_name')
-                    ->whereColumn('duplicate.apk_sha256', 'submissions.apk_sha256')
-                    ->whereColumn('duplicate.schema_version', 'submissions.schema_version')
-                    ->whereColumn('duplicate.label', 'submissions.label');
+                    ->selectRaw('COUNT(*)');
+
+                $this->applySubmissionSignatureConstraints($subQuery, 'duplicate');
             }, 'submission_count')
             ->selectSub(function ($subQuery) {
                 $subQuery->from('submissions as duplicate')
                     ->selectRaw('COUNT(DISTINCT duplicate.device_id)')
-                    ->whereNotNull('duplicate.device_id')
-                    ->whereColumn('duplicate.package_name', 'submissions.package_name')
-                    ->whereColumn('duplicate.apk_sha256', 'submissions.apk_sha256')
-                    ->whereColumn('duplicate.schema_version', 'submissions.schema_version')
-                    ->whereColumn('duplicate.label', 'submissions.label');
+                    ->whereNotNull('duplicate.device_id');
+
+                $this->applySubmissionSignatureConstraints($subQuery, 'duplicate');
             }, 'device_count')
             ->selectSub(function ($subQuery) {
                 $subQuery->from('submissions as duplicate')
                     ->selectRaw('COUNT(DISTINCT duplicate.contributor_id)')
-                    ->whereNotNull('duplicate.contributor_id')
-                    ->whereColumn('duplicate.package_name', 'submissions.package_name')
-                    ->whereColumn('duplicate.apk_sha256', 'submissions.apk_sha256')
-                    ->whereColumn('duplicate.schema_version', 'submissions.schema_version')
-                    ->whereColumn('duplicate.label', 'submissions.label');
+                    ->whereNotNull('duplicate.contributor_id');
+
+                $this->applySubmissionSignatureConstraints($subQuery, 'duplicate');
             }, 'contributor_count');
 
         // Filters
@@ -178,5 +173,20 @@ class SubmissionsController extends Controller
         ]);
 
         return back()->with('success', count($request->input('ids')).' submission(s) rejected.');
+    }
+
+    /**
+     * Constrain a subquery to records that match a submission signature.
+     *
+     * Applies whereColumn constraints between the aliased subquery table and the
+     * parent `submissions` table using package_name, apk_sha256, schema_version, and label.
+     */
+    private function applySubmissionSignatureConstraints(QueryBuilder $query, string $alias): void
+    {
+        $query
+            ->whereColumn("$alias.package_name", 'submissions.package_name')
+            ->whereColumn("$alias.apk_sha256", 'submissions.apk_sha256')
+            ->whereColumn("$alias.schema_version", 'submissions.schema_version')
+            ->whereColumn("$alias.label", 'submissions.label');
     }
 }

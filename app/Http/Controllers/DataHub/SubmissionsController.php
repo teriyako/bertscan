@@ -13,7 +13,12 @@ class SubmissionsController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Submission::with(['contributor:id,email', 'device:id,device_public_id']);
+        $query = Submission::query()
+            ->with([
+                'user:id,name,email',
+                'contributor:id,email',
+                'device:id,device_public_id,device_name',
+            ]);
 
         // Filters
         if ($request->filled('status')) {
@@ -35,20 +40,64 @@ class SubmissionsController extends Controller
             $query->whereDate('received_at', '<=', $request->input('date_to'));
         }
 
+        $statsBaseQuery = clone $query;
+        $stats = [
+            'total' => (clone $statsBaseQuery)->count(),
+            'new' => (clone $statsBaseQuery)->where('status', 'new')->count(),
+            'approved' => (clone $statsBaseQuery)->where('status', 'approved')->count(),
+            'rejected' => (clone $statsBaseQuery)->where('status', 'rejected')->count(),
+            'malicious' => (clone $statsBaseQuery)->where('label', 'malicious')->count(),
+            'today' => (clone $statsBaseQuery)->whereDate('received_at', now())->count(),
+        ];
+
         $submissions = $query->latest('received_at')->paginate(25)->withQueryString();
 
         return Inertia::render('data-hub/submissions/index', [
             'submissions' => $submissions,
             'filters' => $request->only(['status', 'label', 'schema_version', 'package_name', 'date_from', 'date_to']),
+            'stats' => $stats,
         ]);
     }
 
     public function show(Submission $submission): Response
     {
-        $submission->load(['contributor:id,email', 'device:id,device_public_id', 'reviewer:id,name']);
+        $submission->load([
+            'user:id,name,email',
+            'contributor:id,email',
+            'device:id,device_public_id,device_name',
+            'reviewer:id,name',
+        ]);
+
+        $relatedQuery = Submission::query()
+            ->where('package_name', $submission->package_name)
+            ->where('apk_sha256', $submission->apk_sha256);
+
+        $relatedStats = [
+            'submission_count' => (clone $relatedQuery)->count(),
+            'device_count' => (clone $relatedQuery)
+                ->whereNotNull('device_id')
+                ->distinct('device_id')
+                ->count('device_id'),
+            'contributor_count' => (clone $relatedQuery)
+                ->whereNotNull('contributor_id')
+                ->distinct('contributor_id')
+                ->count('contributor_id'),
+        ];
+
+        $relatedSubmissions = (clone $relatedQuery)
+            ->with([
+                'user:id,name,email',
+                'contributor:id,email',
+                'device:id,device_public_id,device_name',
+            ])
+            ->latest('received_at')
+            ->paginate(10, ['*'], 'related_page')
+            ->withQueryString();
 
         return Inertia::render('data-hub/submissions/show', [
             'submission' => $submission,
+            'relatedStats' => $relatedStats,
+            'relatedSubmissions' => $relatedSubmissions,
         ]);
     }
 

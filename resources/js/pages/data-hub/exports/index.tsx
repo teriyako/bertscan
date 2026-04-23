@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { dashboard } from '@/routes/data-hub';
+import { dashboard } from '@/routes';
 import { create, download, index, show } from '@/routes/data-hub/exports';
 
 interface DatasetExport {
@@ -190,7 +190,7 @@ export default function ExportsIndex({
 
 ExportsIndex.layout = {
     breadcrumbs: [
-        { title: 'Data Hub', href: dashboard() },
+        { title: 'Dashboard', href: dashboard() },
         { title: 'Exports', href: index() },
     ],
 };

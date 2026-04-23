@@ -3,7 +3,7 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { dashboard } from '@/routes/data-hub';
+import { dashboard } from '@/routes';
 import { download, index } from '@/routes/data-hub/exports';
 
 interface ExportFilters {
@@ -166,7 +166,7 @@ function Row({
 
 ExportShow.layout = {
     breadcrumbs: [
-        { title: 'Data Hub', href: dashboard() },
+        { title: 'Dashboard', href: dashboard() },
         { title: 'Exports', href: index() },
         { title: 'Detail' },
     ],

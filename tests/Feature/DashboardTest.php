@@ -15,5 +15,19 @@ test('authenticated users can visit the dashboard', function () {
     $this->actingAs($user);
 
     $response = $this->get(route('dashboard'));
-    $response->assertOk();
+    $response->assertOk()
+        ->assertInertia(
+            fn ($page) => $page
+                ->component('data-hub/dashboard')
+                ->has('stats')
+                ->has('charts')
+        );
+});
+
+test('data-hub dashboard route redirects to dashboard route', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $response = $this->get(route('data-hub.dashboard'));
+    $response->assertRedirect(route('dashboard'));
 });

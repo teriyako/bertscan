@@ -1,13 +1,12 @@
 <?php
 
-use App\Http\Controllers\DataHub\DashboardController;
 use App\Http\Controllers\DataHub\DatasetExportsController;
 use App\Http\Controllers\DataHub\SubmissionsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('data-hub')->name('data-hub.')->group(function () {
     // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::redirect('/', '/dashboard')->name('dashboard');
 
     // Submissions
     Route::get('submissions', [SubmissionsController::class, 'index'])->name('submissions.index');

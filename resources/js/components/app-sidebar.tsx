@@ -1,10 +1,10 @@
 import { Link } from '@inertiajs/react';
 import {
     BookOpen,
-    Database,
     FileDown,
     FolderGit2,
     LayoutGrid,
+    ShieldCheck,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -19,11 +19,10 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import type { NavItem } from '@/types';
 import { dashboard } from '@/routes';
-import { dashboard as dataHubDashboard } from '@/routes/data-hub';
 import { index as exportsIndex } from '@/routes/data-hub/exports';
 import { index as submissionsIndex } from '@/routes/data-hub/submissions';
-import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
@@ -35,14 +34,9 @@ const mainNavItems: NavItem[] = [
 
 const dataHubNavItems: NavItem[] = [
     {
-        title: 'Data Hub',
-        href: dataHubDashboard(),
-        icon: Database,
-    },
-    {
         title: 'Submissions',
         href: submissionsIndex(),
-        icon: Database,
+        icon: ShieldCheck,
     },
     {
         title: 'Exports',

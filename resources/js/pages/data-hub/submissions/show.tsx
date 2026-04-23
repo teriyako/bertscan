@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { decodeHtmlEntities } from '@/lib/html';
 import { dashboard } from '@/routes';
 import { approve, index, reject } from '@/routes/data-hub/submissions';
 
@@ -53,16 +54,6 @@ interface RelatedStats {
     submission_count: number;
     device_count: number;
     contributor_count: number;
-}
-
-function decodeHtmlEntities(text: string): string {
-    if (typeof window === 'undefined') {
-        return text;
-    }
-
-    const document = new DOMParser().parseFromString(text, 'text/html');
-
-    return document.documentElement.textContent ?? text;
 }
 
 export default function SubmissionShow({

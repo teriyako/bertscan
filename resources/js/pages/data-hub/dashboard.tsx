@@ -192,7 +192,7 @@ export default function DataHubDashboard({
                                 <div
                                     className="size-24 rounded-full"
                                     style={{
-                                        background: `conic-gradient(#16a34a ${percent(charts.label_breakdown.benign, Math.max(1, charts.label_breakdown.benign + charts.label_breakdown.malicious))}%, #dc2626 0)`,
+                                        background: `conic-gradient(hsl(var(--primary)) ${percent(charts.label_breakdown.benign, Math.max(1, charts.label_breakdown.benign + charts.label_breakdown.malicious))}%, hsl(var(--destructive)) 0)`,
                                     }}
                                 />
                                 <div className="space-y-2 text-sm">

@@ -15,6 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { decodeHtmlEntities } from '@/lib/html';
 import { dashboard } from '@/routes';
 import {
     bulkApprove,
@@ -62,6 +63,7 @@ interface SubmissionStats {
     today: number;
 }
 
+// Keep this in sync with table headers (including checkbox and action columns).
 const TABLE_COLUMN_COUNT = 10;
 
 function statusBadge(status: string) {
@@ -94,7 +96,7 @@ function formatRelativeSameDay(timestamp: string): string {
     const diffMs = now.getTime() - date.getTime();
 
     if (diffMs <= 0) {
-        return 'Just now';
+        return 'In the future';
     }
 
     const minutes = Math.floor(diffMs / (1000 * 60));
@@ -125,16 +127,6 @@ function formatReceived(timestamp: string): string {
     }
 
     return date.toLocaleString();
-}
-
-function decodeHtmlEntities(text: string): string {
-    if (typeof window === 'undefined') {
-        return text;
-    }
-
-    const document = new DOMParser().parseFromString(text, 'text/html');
-
-    return document.documentElement.textContent ?? text;
 }
 
 export default function SubmissionsIndex({

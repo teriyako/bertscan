@@ -29,22 +29,15 @@ class DashboardController extends Controller
             'submissions_today' => Submission::whereDate('received_at', $now)->count(),
         ];
 
-        $dailySeriesRows = Submission::query()
-            ->selectRaw('DATE(received_at) as day, COUNT(*) as total')
-            ->where('received_at', '>=', $windowStart)
-            ->groupBy('day')
-            ->orderBy('day')
-            ->get()
-            ->keyBy('day');
-
         $submissionsPerDay = collect(range(0, 6))
-            ->map(function (int $offset) use ($windowStart, $dailySeriesRows) {
+            ->map(function (int $offset) use ($windowStart) {
                 $day = Carbon::parse($windowStart)->addDays($offset);
-                $dayKey = $day->toDateString();
 
                 return [
                     'day' => $day->format('D'),
-                    'count' => (int) ($dailySeriesRows[$dayKey]->total ?? 0),
+                    'count' => Submission::query()
+                        ->whereDate('received_at', $day)
+                        ->count(),
                 ];
             })
             ->values();

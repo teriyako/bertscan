@@ -13,7 +13,39 @@ class SubmissionsController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Submission::with(['contributor:id,email', 'device:id,device_public_id']);
+        $query = Submission::query()
+            ->select('submissions.*')
+            ->with([
+                'user:id,name,email',
+                'contributor:id,email',
+                'device:id,device_public_id,device_name',
+            ])
+            ->selectSub(function ($subQuery) {
+                $subQuery->from('submissions as duplicate')
+                    ->selectRaw('COUNT(*)')
+                    ->whereColumn('duplicate.package_name', 'submissions.package_name')
+                    ->whereColumn('duplicate.apk_sha256', 'submissions.apk_sha256')
+                    ->whereColumn('duplicate.schema_version', 'submissions.schema_version')
+                    ->whereColumn('duplicate.label', 'submissions.label');
+            }, 'submission_count')
+            ->selectSub(function ($subQuery) {
+                $subQuery->from('submissions as duplicate')
+                    ->selectRaw('COUNT(DISTINCT duplicate.device_id)')
+                    ->whereNotNull('duplicate.device_id')
+                    ->whereColumn('duplicate.package_name', 'submissions.package_name')
+                    ->whereColumn('duplicate.apk_sha256', 'submissions.apk_sha256')
+                    ->whereColumn('duplicate.schema_version', 'submissions.schema_version')
+                    ->whereColumn('duplicate.label', 'submissions.label');
+            }, 'device_count')
+            ->selectSub(function ($subQuery) {
+                $subQuery->from('submissions as duplicate')
+                    ->selectRaw('COUNT(DISTINCT duplicate.contributor_id)')
+                    ->whereNotNull('duplicate.contributor_id')
+                    ->whereColumn('duplicate.package_name', 'submissions.package_name')
+                    ->whereColumn('duplicate.apk_sha256', 'submissions.apk_sha256')
+                    ->whereColumn('duplicate.schema_version', 'submissions.schema_version')
+                    ->whereColumn('duplicate.label', 'submissions.label');
+            }, 'contributor_count');
 
         // Filters
         if ($request->filled('status')) {
@@ -45,10 +77,43 @@ class SubmissionsController extends Controller
 
     public function show(Submission $submission): Response
     {
-        $submission->load(['contributor:id,email', 'device:id,device_public_id', 'reviewer:id,name']);
+        $submission->load([
+            'user:id,name,email',
+            'contributor:id,email',
+            'device:id,device_public_id,device_name',
+            'reviewer:id,name',
+        ]);
+
+        $relatedQuery = Submission::query()
+            ->where('package_name', $submission->package_name)
+            ->where('apk_sha256', $submission->apk_sha256);
+
+        $relatedStats = [
+            'submission_count' => (clone $relatedQuery)->count(),
+            'device_count' => (clone $relatedQuery)
+                ->whereNotNull('device_id')
+                ->distinct('device_id')
+                ->count('device_id'),
+            'contributor_count' => (clone $relatedQuery)
+                ->whereNotNull('contributor_id')
+                ->distinct('contributor_id')
+                ->count('contributor_id'),
+        ];
+
+        $relatedSubmissions = (clone $relatedQuery)
+            ->with([
+                'user:id,name,email',
+                'contributor:id,email',
+                'device:id,device_public_id,device_name',
+            ])
+            ->latest('received_at')
+            ->paginate(10, ['*'], 'related_page')
+            ->withQueryString();
 
         return Inertia::render('data-hub/submissions/show', [
             'submission' => $submission,
+            'relatedStats' => $relatedStats,
+            'relatedSubmissions' => $relatedSubmissions,
         ]);
     }
 

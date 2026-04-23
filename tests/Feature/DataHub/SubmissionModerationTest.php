@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Contributor;
+use App\Models\Device;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -146,4 +148,98 @@ test('submissions index filters by schema_version', function () {
 test('guest cannot access submissions index', function () {
     $response = $this->get(route('data-hub.submissions.index'));
     $response->assertRedirect(route('login'));
+});
+
+test('submissions index includes package-level submission count metadata', function () {
+    $admin = makeAdminUser();
+    $user = User::factory()->create();
+
+    Submission::create([
+        'user_id' => $user->id,
+        'device_id' => null,
+        'received_at' => now(),
+        'label' => 'benign',
+        'schema_version' => 1,
+        'package_name' => 'com.example.dupe',
+        'apk_sha256' => str_repeat('d', 64),
+        'features' => ['f1' => 1],
+        'status' => 'new',
+    ]);
+
+    Submission::create([
+        'user_id' => $user->id,
+        'device_id' => null,
+        'received_at' => now()->subMinute(),
+        'label' => 'benign',
+        'schema_version' => 1,
+        'package_name' => 'com.example.dupe',
+        'apk_sha256' => str_repeat('d', 64),
+        'features' => ['f1' => 1],
+        'status' => 'new',
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('data-hub.submissions.index'));
+
+    $response->assertOk()->assertInertia(
+        fn ($page) => $page->where('submissions.data.0.submission_count', 2)
+    );
+});
+
+test('submission show includes paginated related submitter data', function () {
+    $admin = makeAdminUser();
+    $contributor = Contributor::factory()->optedIn()->create();
+    $deviceOne = Device::create([
+        'contributor_id' => $contributor->id,
+        'device_public_id' => 'device-one',
+    ]);
+    $deviceTwo = Device::create([
+        'contributor_id' => $contributor->id,
+        'device_public_id' => 'device-two',
+    ]);
+
+    $main = Submission::create([
+        'contributor_id' => $contributor->id,
+        'device_id' => $deviceOne->id,
+        'received_at' => now(),
+        'label' => 'benign',
+        'schema_version' => 1,
+        'package_name' => 'com.example.shared',
+        'apk_sha256' => str_repeat('e', 64),
+        'features' => ['f1' => 1],
+        'status' => 'new',
+    ]);
+
+    Submission::create([
+        'contributor_id' => $contributor->id,
+        'device_id' => $deviceTwo->id,
+        'received_at' => now()->subMinutes(5),
+        'label' => 'benign',
+        'schema_version' => 1,
+        'package_name' => 'com.example.shared',
+        'apk_sha256' => str_repeat('e', 64),
+        'features' => ['f1' => 1],
+        'status' => 'new',
+    ]);
+
+    Submission::create([
+        'contributor_id' => $contributor->id,
+        'device_id' => $deviceTwo->id,
+        'received_at' => now()->subMinutes(10),
+        'label' => 'benign',
+        'schema_version' => 1,
+        'package_name' => 'com.example.other',
+        'apk_sha256' => str_repeat('f', 64),
+        'features' => ['f1' => 1],
+        'status' => 'new',
+    ]);
+
+    $response = $this->actingAs($admin)->get(route('data-hub.submissions.show', $main));
+
+    $response->assertOk()->assertInertia(
+        fn ($page) => $page
+            ->where('relatedStats.submission_count', 2)
+            ->where('relatedStats.device_count', 2)
+            ->where('relatedStats.contributor_count', 1)
+            ->has('relatedSubmissions.data', 2)
+    );
 });

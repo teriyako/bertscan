@@ -30,8 +30,12 @@ interface Submission {
     apk_sha256: string;
     received_at: string;
     score: number | null;
+    submission_count: number;
+    device_count: number;
+    contributor_count: number;
     user: { id: number; name: string; email: string } | null;
-    device: { id: number; device_public_id: string } | null;
+    contributor: { id: number; email: string } | null;
+    device: { id: number; device_public_id: string; device_name?: string | null } | null;
 }
 
 interface PaginatedData {
@@ -76,6 +80,33 @@ function labelBadge(label: string) {
             {label}
         </Badge>
     );
+}
+
+function formatRelativeSameDay(timestamp: string): string {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const minutes = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+
+    if (minutes < 60) {
+        return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+}
+
+function formatReceived(timestamp: string): string {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const isSameDay = date.toDateString() === now.toDateString();
+
+    if (isSameDay) {
+        return formatRelativeSameDay(timestamp);
+    }
+
+    return date.toLocaleString();
 }
 
 export default function SubmissionsIndex({
@@ -324,6 +355,15 @@ export default function SubmissionsIndex({
                                     SHA256
                                 </th>
                                 <th className="p-3 text-left font-medium">
+                                    Device
+                                </th>
+                                <th className="p-3 text-left font-medium">
+                                    Sources
+                                </th>
+                                <th className="p-3 text-left font-medium">
+                                    Count
+                                </th>
+                                <th className="p-3 text-left font-medium">
                                     Received
                                 </th>
                                 <th className="w-16 p-3"></th>
@@ -333,7 +373,7 @@ export default function SubmissionsIndex({
                             {submissions.data.length === 0 && (
                                 <tr>
                                     <td
-                                        colSpan={8}
+                                        colSpan={11}
                                         className="p-6 text-center text-muted-foreground"
                                     >
                                         No submissions found.
@@ -367,10 +407,25 @@ export default function SubmissionsIndex({
                                             {s.apk_sha256.slice(0, 12)}…
                                         </span>
                                     </td>
+                                    <td className="p-3 text-xs">
+                                        <div className="font-mono">
+                                            {s.device?.device_public_id ?? '—'}
+                                        </div>
+                                    </td>
+                                    <td className="p-3 text-xs text-muted-foreground">
+                                        {s.user?.email ??
+                                            s.contributor?.email ??
+                                            'Unknown submitter'}
+                                        <div>
+                                            {s.device_count} device(s) ·{' '}
+                                            {s.contributor_count} contributor(s)
+                                        </div>
+                                    </td>
+                                    <td className="p-3 font-medium">
+                                        {s.submission_count}
+                                    </td>
                                     <td className="p-3 text-muted-foreground">
-                                        {new Date(
-                                            s.received_at,
-                                        ).toLocaleDateString()}
+                                        {formatReceived(s.received_at)}
                                     </td>
                                     <td className="p-3">
                                         <Link

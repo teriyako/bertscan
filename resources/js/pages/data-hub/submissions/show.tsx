@@ -53,7 +53,7 @@ export default function SubmissionShow({
     return (
         <>
             <Head title={`Submission #${submission.id}`} />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4">
+            <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 <div className="flex items-center justify-between">
                     <Heading
                         title={`Submission #${submission.id}`}
@@ -78,31 +78,37 @@ export default function SubmissionShow({
                 </div>
 
                 {rejecting && (
-                    <div className="flex flex-col gap-3 rounded-lg border border-destructive p-4">
-                        <Label>Rejection Reason (optional)</Label>
-                        <textarea
-                            className="min-h-[80px] rounded border p-2 text-sm"
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                            placeholder="Reason for rejection…"
-                        />
-                        <div className="flex gap-2">
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={handleReject}
-                            >
-                                Confirm Reject
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setRejecting(false)}
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
+                    <Card className="border-destructive/40">
+                        <CardHeader>
+                            <CardTitle className="text-sm">
+                                Rejection Reason (optional)
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <textarea
+                                className="min-h-[90px] rounded-lg border border-border/60 bg-background/70 p-3 text-sm shadow-xs backdrop-blur"
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                placeholder="Reason for rejection…"
+                            />
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={handleReject}
+                                >
+                                    Confirm Reject
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setRejecting(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -110,7 +116,7 @@ export default function SubmissionShow({
                         <CardHeader>
                             <CardTitle className="text-sm">Metadata</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
+                        <CardContent className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
                             <Row label="Status">
                                 <Badge
                                     variant={
@@ -177,7 +183,7 @@ export default function SubmissionShow({
                                 Source & Review
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
+                        <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
                             <Row label="User">
                                 {submission.user
                                     ? `${submission.user.name} (${submission.user.email})`
@@ -206,29 +212,34 @@ export default function SubmissionShow({
                         </CardContent>
                     </Card>
                 </div>
-
+                {/*
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-sm">Feature Text</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <pre className="max-h-60 overflow-auto rounded bg-muted p-3 text-xs whitespace-pre-wrap break-words">
+                        <pre className="max-h-60 overflow-auto rounded-lg bg-muted/40 p-3 text-xs break-words whitespace-pre-wrap">
                             {submission.feature_text ?? '—'}
                         </pre>
                     </CardContent>
                 </Card>
+                */}
 
                 <Card>
-                    <CardHeader>
+                    <CardHeader className="space-y-1">
                         <CardTitle className="text-sm">Features JSON</CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                            Extracted feature map for this submission.
+                        </p>
                     </CardHeader>
                     <CardContent>
-                        <pre className="max-h-96 overflow-auto rounded bg-muted p-3 text-xs">
+                        <pre className="max-h-[520px] overflow-auto rounded-lg border border-border/60 bg-muted/30 p-4 text-xs">
                             {JSON.stringify(submission.features ?? {}, null, 2)}
                         </pre>
                     </CardContent>
                 </Card>
 
+                {/*
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-sm">
@@ -236,11 +247,16 @@ export default function SubmissionShow({
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <pre className="max-h-96 overflow-auto rounded bg-muted p-3 text-xs">
-                            {JSON.stringify(submission.pipeline_manifest ?? {}, null, 2)}
+                        <pre className="max-h-96 overflow-auto rounded-lg bg-muted/40 p-3 text-xs">
+                            {JSON.stringify(
+                                submission.pipeline_manifest ?? {},
+                                null,
+                                2,
+                            )}
                         </pre>
                     </CardContent>
                 </Card>
+                */}
             </div>
         </>
     );
@@ -254,9 +270,11 @@ function Row({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">{label}</span>
-            <span className="text-right">{children}</span>
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+            <span className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+                {label}
+            </span>
+            <div className="mt-2 text-sm text-foreground">{children}</div>
         </div>
     );
 }

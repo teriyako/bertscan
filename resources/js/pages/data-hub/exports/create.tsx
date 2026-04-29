@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -107,178 +108,201 @@ export default function ExportsCreate() {
     return (
         <>
             <Head title="Create Export" />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4">
+            <div className="flex h-full flex-1 flex-col gap-6 p-6">
                 <Heading
                     title="Create Dataset Export"
                     description="Generate a curated CSV dataset from approved submissions"
                 />
 
-                <form onSubmit={handleSubmit} className="max-w-lg space-y-5">
-                    <div className="space-y-1">
-                        <Label htmlFor="name">Export Name (optional)</Label>
-                        <Input
-                            id="name"
-                            placeholder="e.g. Q2 Training Set"
-                            value={form.name}
-                            onChange={(e) =>
-                                setForm((f) => ({ ...f, name: e.target.value }))
-                            }
-                        />
-                        {errors.name && (
-                            <p className="text-xs text-destructive">
-                                {errors.name}
-                            </p>
-                        )}
-                    </div>
+                <Card className="max-w-2xl">
+                    <CardHeader>
+                        <CardTitle className="text-sm font-medium">
+                            Export Settings
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div className="space-y-1">
+                                <Label htmlFor="name">
+                                    Export Name (optional)
+                                </Label>
+                                <Input
+                                    id="name"
+                                    placeholder="e.g. Q2 Training Set"
+                                    value={form.name}
+                                    onChange={(e) =>
+                                        setForm((f) => ({
+                                            ...f,
+                                            name: e.target.value,
+                                        }))
+                                    }
+                                />
+                                {errors.name && (
+                                    <p className="text-xs text-destructive">
+                                        {errors.name}
+                                    </p>
+                                )}
+                            </div>
 
-                    <div className="space-y-1">
-                        <Label htmlFor="schema_version">Schema Version *</Label>
-                        <Input
-                            id="schema_version"
-                            type="number"
-                            required
-                            min={1}
-                            placeholder="e.g. 1"
-                            value={form.schema_version}
-                            onChange={(e) =>
-                                setForm((f) => ({
-                                    ...f,
-                                    schema_version: e.target.value,
-                                }))
-                            }
-                        />
-                        {errors.schema_version && (
-                            <p className="text-xs text-destructive">
-                                {errors.schema_version}
-                            </p>
-                        )}
-                    </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="schema_version">
+                                    Schema Version *
+                                </Label>
+                                <Input
+                                    id="schema_version"
+                                    type="number"
+                                    required
+                                    min={1}
+                                    placeholder="e.g. 1"
+                                    value={form.schema_version}
+                                    onChange={(e) =>
+                                        setForm((f) => ({
+                                            ...f,
+                                            schema_version: e.target.value,
+                                        }))
+                                    }
+                                />
+                                {errors.schema_version && (
+                                    <p className="text-xs text-destructive">
+                                        {errors.schema_version}
+                                    </p>
+                                )}
+                            </div>
 
-                    <div className="space-y-1">
-                        <Label>Label Filter</Label>
-                        <Select
-                            value={form.label}
-                            onValueChange={(v) =>
-                                setForm((f) => ({ ...f, label: v }))
-                            }
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="All labels" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="benign">
-                                    Benign only
-                                </SelectItem>
-                                <SelectItem value="malicious">
-                                    Malicious only
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {errors.label && (
-                            <p className="text-xs text-destructive">
-                                {errors.label}
-                            </p>
-                        )}
-                    </div>
+                            <div className="space-y-1">
+                                <Label>Label Filter</Label>
+                                <Select
+                                    value={form.label}
+                                    onValueChange={(v) =>
+                                        setForm((f) => ({ ...f, label: v }))
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All labels" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All</SelectItem>
+                                        <SelectItem value="benign">
+                                            Benign only
+                                        </SelectItem>
+                                        <SelectItem value="malicious">
+                                            Malicious only
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors.label && (
+                                    <p className="text-xs text-destructive">
+                                        {errors.label}
+                                    </p>
+                                )}
+                            </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                            <Label htmlFor="date_from">Date From</Label>
-                            <Input
-                                id="date_from"
-                                type="date"
-                                value={form.date_from}
-                                onChange={(e) =>
-                                    setForm((f) => ({
-                                        ...f,
-                                        date_from: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label htmlFor="date_to">Date To</Label>
-                            <Input
-                                id="date_to"
-                                type="date"
-                                value={form.date_to}
-                                onChange={(e) =>
-                                    setForm((f) => ({
-                                        ...f,
-                                        date_to: e.target.value,
-                                    }))
-                                }
-                            />
-                        </div>
-                    </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <Label htmlFor="date_from">Date From</Label>
+                                    <Input
+                                        id="date_from"
+                                        type="date"
+                                        value={form.date_from}
+                                        onChange={(e) =>
+                                            setForm((f) => ({
+                                                ...f,
+                                                date_from: e.target.value,
+                                            }))
+                                        }
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="date_to">Date To</Label>
+                                    <Input
+                                        id="date_to"
+                                        type="date"
+                                        value={form.date_to}
+                                        onChange={(e) =>
+                                            setForm((f) => ({
+                                                ...f,
+                                                date_to: e.target.value,
+                                            }))
+                                        }
+                                    />
+                                </div>
+                            </div>
 
-                    <div className="space-y-3">
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={form.approved_only}
-                                onChange={(e) =>
-                                    setForm((f) => ({
-                                        ...f,
-                                        approved_only: e.target.checked,
-                                    }))
-                                }
-                                className="rounded"
-                            />
-                            Approved submissions only (recommended)
-                        </label>
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={form.unique_by_hash}
-                                onChange={(e) =>
-                                    setForm((f) => ({
-                                        ...f,
-                                        unique_by_hash: e.target.checked,
-                                    }))
-                                }
-                                className="rounded"
-                            />
-                            Unique by APK hash (deduplicate)
-                        </label>
-                    </div>
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.approved_only}
+                                        onChange={(e) =>
+                                            setForm((f) => ({
+                                                ...f,
+                                                approved_only: e.target.checked,
+                                            }))
+                                        }
+                                        className="rounded"
+                                    />
+                                    Approved submissions only (recommended)
+                                </label>
+                                <label className="flex items-center gap-2 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={form.unique_by_hash}
+                                        onChange={(e) =>
+                                            setForm((f) => ({
+                                                ...f,
+                                                unique_by_hash:
+                                                    e.target.checked,
+                                            }))
+                                        }
+                                        className="rounded"
+                                    />
+                                    Unique by APK hash (deduplicate)
+                                </label>
+                            </div>
 
-                    {/* Preview */}
-                    <div className="flex items-center gap-3">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={fetchPreview}
-                            disabled={!form.schema_version || previewLoading}
-                        >
-                            {previewLoading ? 'Loading…' : 'Preview Count'}
-                        </Button>
-                        {preview !== null && (
-                            <span className="text-sm text-muted-foreground">
-                                ~{preview.count.toLocaleString()} rows would be
-                                exported
-                            </span>
-                        )}
-                    </div>
+                            {/* Preview */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={fetchPreview}
+                                    disabled={
+                                        !form.schema_version || previewLoading
+                                    }
+                                >
+                                    {previewLoading
+                                        ? 'Loading…'
+                                        : 'Preview Count'}
+                                </Button>
+                                {preview !== null && (
+                                    <span className="text-sm text-muted-foreground">
+                                        ~{preview.count.toLocaleString()} rows
+                                        would be exported
+                                    </span>
+                                )}
+                            </div>
 
-                    <div className="flex gap-3 pt-2">
-                        <Button
-                            type="submit"
-                            disabled={submitting || !form.schema_version}
-                        >
-                            {submitting ? 'Creating…' : 'Create Export'}
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => router.get(index.url())}
-                        >
-                            Cancel
-                        </Button>
-                    </div>
-                </form>
+                            <div className="flex flex-wrap gap-3 pt-2">
+                                <Button
+                                    type="submit"
+                                    disabled={
+                                        submitting || !form.schema_version
+                                    }
+                                >
+                                    {submitting ? 'Creating…' : 'Create Export'}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => router.get(index.url())}
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
+                </Card>
             </div>
         </>
     );

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\DataHub\DashboardController;
 use App\Http\Controllers\DataHub\DatasetExportsController;
+use App\Http\Controllers\DataHub\DevicesController;
+use App\Http\Controllers\DataHub\OptedInUsersController;
 use App\Http\Controllers\DataHub\SubmissionsController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +18,11 @@ Route::middleware(['auth', 'verified'])->prefix('data-hub')->name('data-hub.')->
     Route::post('submissions/{submission}/reject', [SubmissionsController::class, 'reject'])->name('submissions.reject');
     Route::post('submissions/bulk-approve', [SubmissionsController::class, 'bulkApprove'])->name('submissions.bulk-approve');
     Route::post('submissions/bulk-reject', [SubmissionsController::class, 'bulkReject'])->name('submissions.bulk-reject');
+
+    // Opted-in users & devices
+    Route::get('opted-in', [OptedInUsersController::class, 'index'])->name('opted-in.index');
+    Route::get('opted-in/{contributor}', [OptedInUsersController::class, 'show'])->name('opted-in.show');
+    Route::get('devices/{device}', [DevicesController::class, 'show'])->name('devices.show');
 
     // Dataset exports
     Route::get('exports', [DatasetExportsController::class, 'index'])->name('exports.index');

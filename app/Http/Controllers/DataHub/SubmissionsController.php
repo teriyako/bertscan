@@ -26,7 +26,15 @@ class SubmissionsController extends Controller
             $query->where('schema_version', $request->input('schema_version'));
         }
         if ($request->filled('package_name')) {
-            $query->where('package_name', 'like', '%'.$request->input('package_name').'%');
+            $query->where('package_name', 'like', '%' . $request->input('package_name') . '%');
+        }
+        if ($request->filled('apk_sha256')) {
+            $query->where('apk_sha256', 'like', '%' . $request->input('apk_sha256') . '%');
+        }
+        if ($request->filled('device_public_id')) {
+            $query->whereHas('device', function ($deviceQuery) use ($request) {
+                $deviceQuery->where('device_public_id', 'like', '%' . $request->input('device_public_id') . '%');
+            });
         }
         if ($request->filled('date_from')) {
             $query->whereDate('received_at', '>=', $request->input('date_from'));
@@ -34,12 +42,29 @@ class SubmissionsController extends Controller
         if ($request->filled('date_to')) {
             $query->whereDate('received_at', '<=', $request->input('date_to'));
         }
+        if ($request->filled('score_min')) {
+            $query->where('score', '>=', $request->input('score_min'));
+        }
+        if ($request->filled('score_max')) {
+            $query->where('score', '<=', $request->input('score_max'));
+        }
 
         $submissions = $query->latest('received_at')->paginate(25)->withQueryString();
 
         return Inertia::render('data-hub/submissions/index', [
             'submissions' => $submissions,
-            'filters' => $request->only(['status', 'label', 'schema_version', 'package_name', 'date_from', 'date_to']),
+            'filters' => $request->only([
+                'status',
+                'label',
+                'schema_version',
+                'package_name',
+                'apk_sha256',
+                'device_public_id',
+                'score_min',
+                'score_max',
+                'date_from',
+                'date_to',
+            ]),
         ]);
     }
 
@@ -94,7 +119,7 @@ class SubmissionsController extends Controller
             'rejection_reason' => null,
         ]);
 
-        return back()->with('success', count($request->input('ids')).' submission(s) approved.');
+        return back()->with('success', count($request->input('ids')) . ' submission(s) approved.');
     }
 
     public function bulkReject(Request $request): RedirectResponse
@@ -112,6 +137,6 @@ class SubmissionsController extends Controller
             'rejection_reason' => $request->input('rejection_reason'),
         ]);
 
-        return back()->with('success', count($request->input('ids')).' submission(s) rejected.');
+        return back()->with('success', count($request->input('ids')) . ' submission(s) rejected.');
     }
 }

@@ -30,19 +30,6 @@ interface DatasetExport {
     creator: { id: number; name: string } | null;
 }
 
-function statusBadge(status: string) {
-    const variants: Record<
-        string,
-        'default' | 'secondary' | 'destructive' | 'outline'
-    > = {
-        pending: 'secondary',
-        completed: 'default',
-        failed: 'destructive',
-    };
-
-    return <Badge variant={variants[status] ?? 'outline'}>{status}</Badge>;
-}
-
 function BoolBadge({ value }: { value?: boolean }) {
     return value ? (
         <Badge variant="default">Yes</Badge>
@@ -57,8 +44,8 @@ export default function ExportShow({ export: exp }: { export: DatasetExport }) {
     return (
         <>
             <Head title={`Export #${exp.id}`} />
-            <div className="flex h-full flex-1 flex-col gap-6 p-4">
-                <div className="flex items-center justify-between">
+            <div className="flex h-full flex-1 flex-col gap-6 p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <Heading
                         title={exp.name ?? `Export #${exp.id}`}
                         description="Dataset export details"
@@ -70,32 +57,41 @@ export default function ExportShow({ export: exp }: { export: DatasetExport }) {
                     )}
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                    <Card>
+                <div className="grid gap-4 lg:grid-cols-3">
+                    <Card className="lg:col-span-2">
                         <CardHeader>
                             <CardTitle className="text-sm">
                                 Export Info
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                            <Row label="Status">{statusBadge(exp.status)}</Row>
-                            <Row label="Total Rows">
-                                {exp.row_count.toLocaleString()}
-                            </Row>
-                            <Row label="Benign">
-                                {exp.benign_count.toLocaleString()}
-                            </Row>
-                            <Row label="Malicious">
-                                {exp.malicious_count.toLocaleString()}
-                            </Row>
-                            <Row label="Created By">
-                                {exp.creator?.name ?? '—'}
-                            </Row>
-                            <Row label="Created">
-                                {new Date(exp.created_at).toLocaleString()}
-                            </Row>
+                        <CardContent className="space-y-4">
+                            <div className="grid gap-3 sm:grid-cols-3">
+                                <SummaryTile
+                                    label="Total Rows"
+                                    value={exp.row_count.toLocaleString()}
+                                />
+                                <SummaryTile
+                                    label="Benign"
+                                    value={exp.benign_count.toLocaleString()}
+                                />
+                                <SummaryTile
+                                    label="Malicious"
+                                    value={exp.malicious_count.toLocaleString()}
+                                />
+                            </div>
+                            <div className="grid gap-3 text-sm sm:grid-cols-2">
+                                <DetailItem label="Created By">
+                                    {exp.creator?.name ?? '—'}
+                                </DetailItem>
+                                <DetailItem label="Created">
+                                    {new Date(exp.created_at).toLocaleString()}
+                                </DetailItem>
+                                <DetailItem label="Last Updated">
+                                    {new Date(exp.updated_at).toLocaleString()}
+                                </DetailItem>
+                            </div>
                             {exp.error_message && (
-                                <div className="rounded bg-destructive/10 p-2 text-xs text-destructive">
+                                <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
                                     {exp.error_message}
                                 </div>
                             )}
@@ -108,13 +104,13 @@ export default function ExportShow({ export: exp }: { export: DatasetExport }) {
                                 Filters Used
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2 text-sm">
-                            <Row label="Schema Version">
+                        <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+                            <DetailItem label="Schema Version">
                                 {filters.schema_version
                                     ? `v${filters.schema_version}`
                                     : '—'}
-                            </Row>
-                            <Row label="Label">
+                            </DetailItem>
+                            <DetailItem label="Label">
                                 {filters.label ? (
                                     <span className="capitalize">
                                         {filters.label}
@@ -122,17 +118,19 @@ export default function ExportShow({ export: exp }: { export: DatasetExport }) {
                                 ) : (
                                     'All'
                                 )}
-                            </Row>
-                            <Row label="Date From">
+                            </DetailItem>
+                            <DetailItem label="Date From">
                                 {filters.date_from ?? '—'}
-                            </Row>
-                            <Row label="Date To">{filters.date_to ?? '—'}</Row>
-                            <Row label="Approved Only">
+                            </DetailItem>
+                            <DetailItem label="Date To">
+                                {filters.date_to ?? '—'}
+                            </DetailItem>
+                            <DetailItem label="Approved Only">
                                 <BoolBadge value={filters.approved_only} />
-                            </Row>
-                            <Row label="Unique by Hash">
+                            </DetailItem>
+                            <DetailItem label="Unique by Hash">
                                 <BoolBadge value={filters.unique_by_hash} />
-                            </Row>
+                            </DetailItem>
                         </CardContent>
                     </Card>
                 </div>
@@ -149,7 +147,26 @@ export default function ExportShow({ export: exp }: { export: DatasetExport }) {
     );
 }
 
-function Row({
+function SummaryTile({
+    label,
+    value,
+}: {
+    label: string;
+    value: React.ReactNode;
+}) {
+    return (
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+            <div className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+                {label}
+            </div>
+            <div className="mt-2 text-2xl font-semibold text-foreground">
+                {value}
+            </div>
+        </div>
+    );
+}
+
+function DetailItem({
     label,
     children,
 }: {
@@ -157,9 +174,11 @@ function Row({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex justify-between gap-2">
-            <span className="text-muted-foreground">{label}</span>
-            <span className="text-right">{children}</span>
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+            <div className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+                {label}
+            </div>
+            <div className="mt-2 text-sm text-foreground">{children}</div>
         </div>
     );
 }

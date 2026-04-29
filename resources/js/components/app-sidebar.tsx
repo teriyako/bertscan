@@ -1,13 +1,6 @@
 import { Link } from '@inertiajs/react';
-import {
-    BookOpen,
-    Database,
-    FileDown,
-    FolderGit2,
-    LayoutGrid,
-} from 'lucide-react';
+import { Database, FileDown, LayoutGrid, Users } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -19,25 +12,16 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
 import { dashboard as dataHubDashboard } from '@/routes/data-hub';
 import { index as exportsIndex } from '@/routes/data-hub/exports';
 import { index as submissionsIndex } from '@/routes/data-hub/submissions';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
 const dataHubNavItems: NavItem[] = [
     {
         title: 'Data Hub',
         href: dataHubDashboard(),
-        icon: Database,
+        icon: LayoutGrid,
     },
     {
         title: 'Submissions',
@@ -45,22 +29,14 @@ const dataHubNavItems: NavItem[] = [
         icon: Database,
     },
     {
+        title: 'Opted-in Users',
+        href: '/data-hub/opted-in',
+        icon: Users,
+    },
+    {
         title: 'Exports',
         href: exportsIndex(),
         icon: FileDown,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
     },
 ];
 
@@ -71,7 +47,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dataHubDashboard()} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -80,12 +56,10 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
-                <NavMain items={dataHubNavItems} />
+                <NavMain items={dataHubNavItems} label="Data Hub" />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
